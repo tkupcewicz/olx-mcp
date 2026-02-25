@@ -103,3 +103,55 @@ export interface OfferComparison {
   commonParams: string[];
   paramDiffs: Record<string, Record<number, string>>;
 }
+
+// Partner API types for advert management
+
+export interface Advert {
+  id: number;
+  status: string;
+  url: string;
+  title: string;
+  description: string;
+  categoryId: number;
+  price: number | null;
+  currency: string;
+  location: {
+    cityId: number;
+    districtId?: number;
+    lat: number;
+    lon: number;
+  };
+  images: string[];
+  attributes: Record<string, string | number | boolean>;
+  createdAt: string;
+  validTo: string;
+}
+
+export interface AdvertInput {
+  title: string;
+  description: string;
+  categoryId: number;
+  price?: number;
+  currency?: string;
+  cityId: number;
+  districtId?: number;
+  lat?: number;
+  lon?: number;
+  images?: string[];
+  attributes?: Record<string, string | number | boolean>;
+  contact?: {
+    name?: string;
+    phone?: string;
+  };
+}
+
+export interface AdvertAttribute {
+  code: string;
+  label: string;
+  type: string;
+  required: boolean;
+  values?: Array<{ code: string; label: string }>;
+  min?: number;
+  max?: number;
+  unit?: string;
+}

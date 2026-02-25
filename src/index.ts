@@ -4,8 +4,12 @@ import { RateLimiterPool } from "./api/rate-limiter.js";
 import { RATE_LIMIT_CAPACITY, RATE_LIMIT_WINDOW_MS } from "./config.js";
 import { getDb, closeDb } from "./db/database.js";
 import { createServer } from "./server.js";
+import { loadEnv } from "./watcher/env.js";
 
 async function main(): Promise<void> {
+  // Load .env for Telegram config etc.
+  loadEnv();
+
   // Initialize database
   getDb();
 
@@ -14,7 +18,7 @@ async function main(): Promise<void> {
   const client = new OlxClient(rateLimiters);
 
   // Create and start MCP server
-  const server = createServer(client);
+  const server = createServer(client, rateLimiters);
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
