@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "olx": {
+      "command": "npx",
+      "args": ["tsx", "src/index.ts"],
+      "cwd": "/home/tk/Documents/olx-mcp"
+    }
+  }
+}
