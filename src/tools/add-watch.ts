@@ -10,6 +10,7 @@ const schema = {
   price_min: z.number().optional().describe("Minimum price filter"),
   price_max: z.number().optional().describe("Maximum price filter"),
   alert_below: z.number().optional().describe("Only alert on new offers below this price"),
+  title_must_contain: z.string().optional().describe("Comma-separated keywords — only include offers whose title contains at least one (e.g. '9070,9070xt')"),
   country: z.string().optional().describe(`Country code (default: ${DEFAULT_COUNTRY})`),
 };
 
@@ -26,6 +27,7 @@ export function registerAddWatch(server: McpServer): void {
         priceMin: params.price_min,
         priceMax: params.price_max,
         alertBelow: params.alert_below,
+        titleMustContain: params.title_must_contain,
         country: params.country,
       });
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { OlxClient } from "./api/client.js";
 import { RateLimiterPool } from "./api/rate-limiter.js";

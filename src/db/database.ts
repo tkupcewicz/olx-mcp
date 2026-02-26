@@ -54,6 +54,7 @@ const SCHEMA = `
     price_min REAL,
     price_max REAL,
     alert_below REAL,
+    title_must_contain TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 

@@ -15,6 +15,7 @@ export interface Watch {
   priceMin: number | null;
   priceMax: number | null;
   alertBelow: number | null;
+  titleMustContain: string | null;
   createdAt: string;
 }
 
@@ -53,13 +54,14 @@ export function addWatch(params: {
   priceMin?: number;
   priceMax?: number;
   alertBelow?: number;
+  titleMustContain?: string;
 }): Watch {
   const db = getDb();
   const id = crypto.randomUUID().slice(0, 8);
 
   db.prepare(`
-    INSERT INTO watches (id, name, query, country, category_id, price_min, price_max, alert_below)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO watches (id, name, query, country, category_id, price_min, price_max, alert_below, title_must_contain)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     params.name,
@@ -69,6 +71,7 @@ export function addWatch(params: {
     params.priceMin ?? null,
     params.priceMax ?? null,
     params.alertBelow ?? null,
+    params.titleMustContain ?? null,
   );
 
   return getWatch(id)!;
@@ -79,7 +82,8 @@ export function getWatch(id: string): Watch | undefined {
   return db.prepare(`
     SELECT id, name, query, country, category_id as categoryId,
            price_min as priceMin, price_max as priceMax,
-           alert_below as alertBelow, created_at as createdAt
+           alert_below as alertBelow, title_must_contain as titleMustContain,
+           created_at as createdAt
     FROM watches WHERE id = ?
   `).get(id) as Watch | undefined;
 }
@@ -89,7 +93,8 @@ export function listWatches(): Watch[] {
   return db.prepare(`
     SELECT id, name, query, country, category_id as categoryId,
            price_min as priceMin, price_max as priceMax,
-           alert_below as alertBelow, created_at as createdAt
+           alert_below as alertBelow, title_must_contain as titleMustContain,
+           created_at as createdAt
     FROM watches ORDER BY created_at DESC
   `).all() as Watch[];
 }
@@ -122,7 +127,17 @@ export async function checkWatch(
     country: watch.country,
   };
 
-  const offers = await fetchAllPages(client, params);
+  let offers = await fetchAllPages(client, params);
+
+  // Filter by title keywords if configured
+  if (watch.titleMustContain) {
+    const keywords = watch.titleMustContain.toLowerCase().split(",").map((k) => k.trim());
+    offers = offers.filter((o) => {
+      const title = o.title.toLowerCase();
+      return keywords.some((kw) => title.includes(kw));
+    });
+  }
+
   const stored = getStoredOffers(db, watch.id);
   const isFirstRun = stored.size === 0;
 

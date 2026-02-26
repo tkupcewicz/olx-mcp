@@ -4,6 +4,9 @@
   "description": "MCP server for OLX Poland marketplace",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "olx-mcp": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

@@ -1,9 +1,15 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { RateLimiterPool } from "../api/rate-limiter.js";
-import { AuthenticatedOlxClient } from "../api/authenticated-client.js";
+import { AuthenticatedOlxClient, PartnerApiError } from "../api/authenticated-client.js";
 import { getAccessToken } from "../auth/helpers.js";
 import { createAdvert } from "../services/adverts.js";
+
+function formatError(err: unknown): string {
+  if (err instanceof PartnerApiError) return `API error (${err.status}): ${err.message}`;
+  if (err instanceof Error) return err.message;
+  return "Unknown error";
+}
 import { DEFAULT_COUNTRY } from "../config.js";
 
 const schema = {
@@ -35,44 +41,48 @@ export function registerCreateAdvert(
     "Create a new OLX listing. Requires authentication. Use get_advert_attributes first to learn required fields for the category.",
     schema,
     async (params, extra) => {
-      const token = getAccessToken(extra);
-      const client = new AuthenticatedOlxClient(token, rateLimiters);
+      try {
+        const token = getAccessToken(extra);
+        const client = new AuthenticatedOlxClient(token, rateLimiters);
 
-      const advert = await createAdvert(
-        client,
-        {
-          title: params.title,
-          description: params.description,
-          categoryId: params.category_id,
-          price: params.price,
-          currency: params.currency,
-          cityId: params.city_id,
-          districtId: params.district_id,
-          lat: params.lat,
-          lon: params.lon,
-          images: params.images,
-          attributes: params.attributes,
-          contact: params.contact_name || params.contact_phone
-            ? { name: params.contact_name, phone: params.contact_phone }
-            : undefined,
-        },
-        params.country,
-      );
+        const advert = await createAdvert(
+          client,
+          {
+            title: params.title,
+            description: params.description,
+            categoryId: params.category_id,
+            price: params.price,
+            currency: params.currency,
+            cityId: params.city_id,
+            districtId: params.district_id,
+            lat: params.lat,
+            lon: params.lon,
+            images: params.images,
+            attributes: params.attributes,
+            contact: params.contact_name || params.contact_phone
+              ? { name: params.contact_name, phone: params.contact_phone }
+              : undefined,
+          },
+          params.country,
+        );
 
-      const lines = [
-        `Advert created successfully!`,
-        "",
-        `**${advert.title}**`,
-        `ID: ${advert.id}`,
-        `Status: ${advert.status}`,
-        `URL: ${advert.url}`,
-      ];
+        const lines = [
+          `Advert created successfully!`,
+          "",
+          `**${advert.title}**`,
+          `ID: ${advert.id}`,
+          `Status: ${advert.status}`,
+          `URL: ${advert.url}`,
+        ];
 
-      if (advert.price !== null) {
-        lines.push(`Price: ${advert.price} ${advert.currency}`);
+        if (advert.price !== null) {
+          lines.push(`Price: ${advert.price} ${advert.currency}`);
+        }
+
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: formatError(err) }], isError: true };
       }
-
-      return { content: [{ type: "text", text: lines.join("\n") }] };
     },
   );
 }

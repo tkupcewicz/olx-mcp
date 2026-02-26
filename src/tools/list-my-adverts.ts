@@ -31,42 +31,46 @@ export function registerListMyAdverts(
     "List your own OLX adverts. Requires authentication.",
     schema,
     async (params, extra) => {
-      const token = getAccessToken(extra);
-      const client = new AuthenticatedOlxClient(token, rateLimiters);
+      try {
+        const token = getAccessToken(extra);
+        const client = new AuthenticatedOlxClient(token, rateLimiters);
 
-      const page = params.page ?? 1;
-      const limit = params.limit ?? 20;
+        const page = params.page ?? 1;
+        const limit = params.limit ?? 20;
 
-      const result = await listMyAdverts(client, {
-        offset: (page - 1) * limit,
-        limit,
-        status: params.status,
-        country: params.country,
-      });
+        const result = await listMyAdverts(client, {
+          offset: (page - 1) * limit,
+          limit,
+          status: params.status,
+          country: params.country,
+        });
 
-      const lines = [
-        `Your adverts (page ${page}, showing ${result.adverts.length}):`,
-        "",
-      ];
-
-      for (const advert of result.adverts) {
-        const priceStr = advert.price !== null
-          ? `${advert.price} ${advert.currency}`
-          : "No price";
-        lines.push(
-          `**${advert.title}**`,
-          `  ID: ${advert.id} | Status: ${advert.status} | Price: ${priceStr}`,
-          `  URL: ${advert.url}`,
-          `  Valid to: ${advert.validTo}`,
+        const lines = [
+          `Your adverts (page ${page}, showing ${result.adverts.length}):`,
           "",
-        );
-      }
+        ];
 
-      if (result.hasNextPage) {
-        lines.push(`Next page: ${page + 1}`);
-      }
+        for (const advert of result.adverts) {
+          const priceStr = advert.price !== null
+            ? `${advert.price} ${advert.currency}`
+            : "No price";
+          lines.push(
+            `**${advert.title}**`,
+            `  ID: ${advert.id} | Status: ${advert.status} | Price: ${priceStr}`,
+            `  URL: ${advert.url}`,
+            `  Valid to: ${advert.validTo}`,
+            "",
+          );
+        }
 
-      return { content: [{ type: "text", text: lines.join("\n") }] };
+        if (result.hasNextPage) {
+          lines.push(`Next page: ${page + 1}`);
+        }
+
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (err) {
+        return { content: [{ type: "text", text: formatError(err) }], isError: true };
+      }
     },
   );
 }

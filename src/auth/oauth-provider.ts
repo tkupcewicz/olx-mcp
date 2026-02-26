@@ -98,12 +98,8 @@ export class OlxOAuthProvider implements OAuthServerProvider {
     _client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<string> {
-    // We skip local PKCE; return the code itself as a dummy challenge.
-    // The upstream OLX server handles actual validation.
-    const db = getDb();
-    // Try to find the session by looking up via stored auth code
-    // Since we store by state, we use the code as a lookup key in our token exchange
-    // Return a dummy value since skipLocalPkceValidation is true
+    // skipLocalPkceValidation is true, so this is a no-op.
+    // The upstream OLX server handles actual PKCE validation.
     return authorizationCode;
   }
 
